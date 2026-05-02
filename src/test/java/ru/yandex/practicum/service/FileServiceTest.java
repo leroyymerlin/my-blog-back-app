@@ -1,0 +1,125 @@
+package ru.yandex.practicum.service;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
+import ru.yandex.practicum.repository.FileRepository;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class FileServiceTest {
+
+    @Mock
+    private FileRepository fileRepository;
+
+    @InjectMocks
+    private FileService fileService;
+
+    @AfterEach
+    void tearDown() throws IOException {
+        Path uploadDir = Paths.get(FileService.UPLOAD_DIR);
+        if (Files.exists(uploadDir)) {
+            Files.walk(uploadDir)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException ignored) {
+
+                        }
+                    });
+        }
+    }
+
+    @Test
+    void upload_ShouldCreateDirectoryAndSaveFileAndCallRepository() throws IOException {
+        int postId = 1;
+        String fileName = "test.png";
+        byte[] fileContent = "image data".getBytes();
+        String contentType = "image/png";
+
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn(fileName);
+        when(file.getBytes()).thenReturn(fileContent);
+        when(file.getContentType()).thenReturn(contentType);
+
+        String result = fileService.upload(postId, file);
+
+        assertEquals(fileName, result);
+
+        Path expectedPath = Paths.get(FileService.UPLOAD_DIR, fileName);
+        verify(file, times(1)).transferTo(expectedPath);
+
+        verify(fileRepository, times(1)).addImage(eq(postId), eq(fileContent), eq(contentType));
+    }
+
+    @Test
+    void upload_WhenDirectoryAlreadyExists_ShouldNotRecreateAndStillWork() throws IOException {
+        Path uploadDir = Paths.get(FileService.UPLOAD_DIR);
+        Files.createDirectories(uploadDir);
+
+        int postId = 2;
+        String fileName = "existing.png";
+        byte[] fileContent = "data".getBytes();
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn(fileName);
+        when(file.getBytes()).thenReturn(fileContent);
+        when(file.getContentType()).thenReturn("image/png");
+
+        String result = fileService.upload(postId, file);
+
+        assertEquals(fileName, result);
+        verify(fileRepository).addImage(eq(postId), eq(fileContent), eq("image/png"));
+    }
+
+    @Test
+    void upload_WhenIOExceptionOccurs_ShouldThrowRuntimeException() throws IOException {
+        int postId = 1;
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("file.txt");
+        when(file.getBytes()).thenThrow(new IOException("Simulated IO error"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> fileService.upload(postId, file));
+        assertTrue(exception.getMessage().contains("Simulated IO error"));
+        verify(fileRepository, never()).addImage(anyInt(), any(), any());
+    }
+
+    @Test
+    void download_ShouldReturnResourceWithImageData() throws IOException {
+        int postId = 1;
+        byte[] imageData = {1, 2, 3, 4};
+        when(fileRepository.download(postId)).thenReturn(imageData);
+
+        Resource resource = fileService.download(postId);
+
+        assertNotNull(resource);
+        assertTrue(resource.exists());
+        assertEquals(imageData.length, resource.contentLength());
+        verify(fileRepository, times(1)).download(postId);
+    }
+
+    @Test
+    void download_WhenNoImage_ShouldReturnEmptyResource() throws IOException {
+        int postId = 999;
+        when(fileRepository.download(postId)).thenReturn(new byte[0]);
+
+        Resource resource = fileService.download(postId);
+
+        assertNotNull(resource);
+        assertEquals(0, resource.contentLength());
+        verify(fileRepository).download(postId);
+    }
+}
