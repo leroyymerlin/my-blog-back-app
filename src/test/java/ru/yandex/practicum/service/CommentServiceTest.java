@@ -2,10 +2,11 @@ package ru.yandex.practicum.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.configuration.CommentServiceTestConfig;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.repository.CommentRepository;
 
@@ -15,13 +16,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@Import(CommentServiceTestConfig.class)
 class CommentServiceTest {
 
-    @Mock
+    @Autowired
     private CommentRepository commentRepository;
 
-    @InjectMocks
+    @Autowired
     private CommentService commentService;
 
     private Comment testComment;
@@ -29,6 +31,9 @@ class CommentServiceTest {
 
     @BeforeEach
     void setUp() {
+
+        Mockito.reset(commentRepository);
+
         testComment = new Comment();
         testComment.setId(1);
         testComment.setText("Text");

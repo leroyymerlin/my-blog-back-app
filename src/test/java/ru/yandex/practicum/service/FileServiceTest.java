@@ -1,13 +1,16 @@
 package ru.yandex.practicum.service;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import ru.yandex.practicum.configuration.FileServiceTestConfig;
 import ru.yandex.practicum.repository.FileRepository;
 
 import java.io.IOException;
@@ -19,14 +22,21 @@ import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@Transactional
+@Import(FileServiceTestConfig.class)
 class FileServiceTest {
 
-    @Mock
+    @Autowired
     private FileRepository fileRepository;
 
-    @InjectMocks
+    @Autowired
     private FileService fileService;
+
+    @BeforeEach
+    void resetMocks() {
+        Mockito.reset(fileRepository);
+    }
 
     @AfterEach
     void tearDown() throws IOException {

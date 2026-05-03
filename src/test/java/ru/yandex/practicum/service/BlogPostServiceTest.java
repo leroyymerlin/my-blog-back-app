@@ -3,10 +3,11 @@ package ru.yandex.practicum.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.configuration.BlogPostServiceTestConfig;
 import ru.yandex.practicum.model.Blog;
 import ru.yandex.practicum.model.Post;
 import ru.yandex.practicum.repository.BlogRepository;
@@ -17,13 +18,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@Import(BlogPostServiceTestConfig.class)
 class BlogPostServiceTest {
 
-    @Mock
+    @Autowired
     private BlogRepository blogRepository;
 
-    @InjectMocks
+    @Autowired
     private BlogPostService blogPostService;
 
     private Post testPost;
@@ -31,6 +33,9 @@ class BlogPostServiceTest {
 
     @BeforeEach
     void setUp() {
+
+        Mockito.reset(blogRepository);
+
         testPost = new Post();
         testPost.setIdPost(1);
         testPost.setTitle("Test Title");
@@ -151,8 +156,8 @@ class BlogPostServiceTest {
         Post result = blogPostService.incrementLikes(postId);
 
         assertNotNull(result);
-        assertEquals(6, result.getLikeCount());  // 5 + 1
-        assertEquals(10, result.getCommentCount()); // осталось без изменений
+        assertEquals(6, result.getLikeCount());
+        assertEquals(10, result.getCommentCount());
         verify(blogRepository, times(1)).getPost(postId);
         verify(blogRepository, times(1)).updatePost(eq(postId), argThat(post ->
                 post.getLikeCount() == 6
