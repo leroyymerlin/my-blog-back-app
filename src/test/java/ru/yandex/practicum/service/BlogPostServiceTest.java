@@ -3,11 +3,9 @@ package ru.yandex.practicum.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import ru.yandex.practicum.configuration.BlogPostServiceTestConfig;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ru.yandex.practicum.model.Blog;
 import ru.yandex.practicum.model.Post;
 import ru.yandex.practicum.repository.BlogRepository;
@@ -18,11 +16,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Import(BlogPostServiceTestConfig.class)
+@SpringBootTest(properties = {"spring.main.lazy-initialization=true"})
 class BlogPostServiceTest {
 
-    @Autowired
+    @MockitoBean
     private BlogRepository blogRepository;
 
     @Autowired
@@ -33,8 +30,6 @@ class BlogPostServiceTest {
 
     @BeforeEach
     void setUp() {
-
-        Mockito.reset(blogRepository);
 
         testPost = new Post();
         testPost.setIdPost(1);

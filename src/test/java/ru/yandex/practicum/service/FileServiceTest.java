@@ -6,11 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
-import ru.yandex.practicum.configuration.FileServiceTestConfig;
 import ru.yandex.practicum.repository.FileRepository;
 
 import java.io.IOException;
@@ -22,12 +20,10 @@ import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Transactional
-@Import(FileServiceTestConfig.class)
+@SpringBootTest(properties = {"spring.main.lazy-initialization=true"})
 class FileServiceTest {
 
-    @Autowired
+    @MockitoBean
     private FileRepository fileRepository;
 
     @Autowired

@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import ru.yandex.practicum.configuration.CommentServiceTestConfig;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.repository.CommentRepository;
 
@@ -16,11 +15,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Import(CommentServiceTestConfig.class)
+@SpringBootTest(properties = {"spring.main.lazy-initialization=true"})
 class CommentServiceTest {
 
-    @Autowired
+    @MockitoBean
     private CommentRepository commentRepository;
 
     @Autowired
